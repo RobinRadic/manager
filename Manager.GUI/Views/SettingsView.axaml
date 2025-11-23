@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Manager.GUI.ViewModels"
+             x:Class="Manager.GUI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <StackPanel>
+        <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Margin="0,0,0,20" />
+        <TextBlock Text="This is where the settings list will go." />
+
+    </StackPanel>
+</UserControl>

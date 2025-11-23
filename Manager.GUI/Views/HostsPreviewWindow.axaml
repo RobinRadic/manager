@@ -1,0 +1,17 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Manager.GUI.ViewModels"
+        x:Class="Manager.GUI.Views.HostsPreviewWindow"
+        x:DataType="vm:HostsPreviewViewModel"
+        Title="Hosts File Preview"
+        Width="600" Height="700"
+        WindowStartupLocation="CenterOwner">
+    
+    <Grid Margin="10">
+        <TextBox Text="{Binding Content}" 
+                 IsReadOnly="True" 
+                 FontFamily="Cascadia Code,Consolas,Monospace"
+                 AcceptsReturn="True" 
+                 TextWrapping="Wrap"/>
+    </Grid>
+</Window>

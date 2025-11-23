@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Manager.GUI.ViewModels"
+             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             x:Class="Manager.GUI.Views.NginxView"
+             x:DataType="vm:NginxViewModel">
+
+    <Grid RowDefinitions="Auto, *" ColumnDefinitions="250, *">
+        
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+                    Orientation="Horizontal" Spacing="10" Margin="10" Background="#2d2d2d">
+            <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0"/>
+            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Grid.Column="0" BorderBrush="#333" BorderThickness="0,0,1,0">
+            <ListBox ItemsSource="{Binding Sites}" 
+                     SelectedItem="{Binding SelectedSite}"
+                     Background="Transparent">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="30, *, Auto">
+                            <Ellipse Grid.Column="0" Width="10" Height="10" 
+                                     Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
+                            
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
+                            
+                            <Button Grid.Column="2" Content="Toggle" 
+                                    Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).ToggleSiteCommand}"
+                                    CommandParameter="{Binding .}"
+                                    FontSize="10" Padding="5,2"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="*, Auto">
+            
+            <avaloniaEdit:TextEditor Name="ConfigEditor"
+                           Grid.Row="0"
+                           FontFamily="Cascadia Code,Consolas,Monospace"
+                           FontSize="14"
+                           ShowLineNumbers="True"
+                           SyntaxHighlighting="C#" 
+                           HorizontalScrollBarVisibility="Auto"
+                           VerticalScrollBarVisibility="Visible"/>
+            
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+                <Button Command="{Binding SaveConfigCommand}" 
+                        Content="Save &amp; Reload Nginx" 
+                        Background="#27ae60" Foreground="White" Padding="15,10"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
