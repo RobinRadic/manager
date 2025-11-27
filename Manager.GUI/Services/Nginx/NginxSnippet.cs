@@ -1,8 +1,16 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace Manager.GUI.Services.Nginx;
 
-public class NginxSnippet
+// Inherit from ObservableObject so the UI updates automatically when properties change
+public partial class NginxSnippet : ObservableObject
 {
-    public string Name { get; set; } = "New Snippet";
-    public string Content { get; set; } = "";
-    public string Description { get; set; } = "";
+    [ObservableProperty] 
+    private string _name = "New Snippet";
+
+    [ObservableProperty] 
+    private string _content = "";
+
+    [ObservableProperty] 
+    private string _description = "";
 }

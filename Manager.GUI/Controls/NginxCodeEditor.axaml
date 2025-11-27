@@ -4,38 +4,14 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Manager.GUI.Controls.NginxCodeEditor">
+             x:Class="Manager.GUI.Controls.NginxCodeEditor"
+             x:Name="Root">
 
-    <Grid RowDefinitions="*, Auto">
-        
-        <avaloniaEdit:TextEditor Name="Editor"
-                                 Grid.Row="0"
-                                 ShowLineNumbers="True"
-                                 HorizontalScrollBarVisibility="Auto"
-                                 VerticalScrollBarVisibility="Visible"
-                                 FontFamily="{Binding FontFamily, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                 FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+    <avaloniaEdit:TextEditor Name="Editor"
+                             ShowLineNumbers="True"
+                             HorizontalScrollBarVisibility="Auto"
+                             VerticalScrollBarVisibility="Visible"
+                             FontFamily="{Binding FontFamily, ElementName=Root}"
+                             FontSize="{Binding FontSize, ElementName=Root}"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
-            
-            <Button Content="Theme">
-                <Button.Flyout>
-                    <Flyout Placement="Top">
-                        <ListBox Name="ThemeList" Height="200" Width="150" 
-                                 SelectionChanged="ThemeList_SelectionChanged">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}" Margin="5"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-
-            <Button Command="{Binding SaveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                    Content="Save &amp; Reload" 
-                    Background="#27ae60" Foreground="White" Padding="15,10"/>
-        </StackPanel>
-    </Grid>
 </UserControl>

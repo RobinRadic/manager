@@ -6,10 +6,14 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using AvaloniaEdit;
+using AvaloniaEdit.CodeCompletion; // Required for CompletionWindow
+using AvaloniaEdit.Document; // Required for Document handling
+using AvaloniaEdit.Editing; // Required for TextArea/Caret
 using AvaloniaEdit.TextMate;
 using Manager.GUI.Services.Nginx;
 using TextMateSharp.Grammars;
 using TextMateSharp.Themes;
+using System.Windows.Input;
 
 namespace Manager.GUI.Controls;
 
@@ -17,10 +21,10 @@ public partial class NginxCodeEditor : UserControl
 {
     private TextMate.Installation? _textMateInstallation;
     private NginxRegistryOptions? _registryOptions;
+    private CompletionWindow? _completionWindow; // The missing Completion Window
 
     #region Dependency Properties
 
-    // 1. Text Property (TwoWay Binding)
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<NginxCodeEditor, string>(nameof(Text), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
@@ -30,17 +34,6 @@ public partial class NginxCodeEditor : UserControl
         set => SetValue(TextProperty, value);
     }
 
-    // 2. Save Command
-    public static readonly StyledProperty<System.Windows.Input.ICommand> SaveCommandProperty =
-        AvaloniaProperty.Register<NginxCodeEditor, System.Windows.Input.ICommand>(nameof(SaveCommand));
-
-    public System.Windows.Input.ICommand SaveCommand
-    {
-        get => GetValue(SaveCommandProperty);
-        set => SetValue(SaveCommandProperty, value);
-    }
-
-    // 3. SelectedTheme (TwoWay Binding) - To sync with Settings
     public static readonly StyledProperty<string> SelectedThemeProperty =
         AvaloniaProperty.Register<NginxCodeEditor, string>(nameof(SelectedTheme), "dark_vs", defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
 
@@ -68,10 +61,15 @@ public partial class NginxCodeEditor : UserControl
         editor.Options.HighlightCurrentLine = true;
 
         // Sync Text <-> Editor
-        editor.TextChanged += (s, e) => 
-        { 
-            if (Text != editor.Text) SetCurrentValue(TextProperty, editor.Text); 
+        editor.TextChanged += (s, e) =>
+        {
+            if (Text != editor.Text) SetCurrentValue(TextProperty, editor.Text);
         };
+
+        // Wire up Completion Events (Restored functionality)
+        editor.TextArea.TextEntered += TextArea_TextEntered;
+        editor.TextArea.TextEntering += TextArea_TextEntering;
+        editor.TextArea.KeyDown += TextArea_KeyDown;
 
         // Initialize Registry & TextMate
         _registryOptions = new NginxRegistryOptions();
@@ -84,7 +82,7 @@ public partial class NginxCodeEditor : UserControl
         {
             themeList.ItemsSource = _registryOptions.GetAvailableThemes();
         }
-        
+
         // Initial Theme Application
         ApplyTheme(SelectedTheme);
     }
@@ -110,15 +108,137 @@ public partial class NginxCodeEditor : UserControl
         }
     }
 
-    private void ThemeList_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+
+    protected TextEditor TextEditor => this.FindControl<TextEditor>("Editor")!;
+
+    #region Completion Logic (Restored)
+
+    private void TextArea_TextEntering(object? sender, TextInputEventArgs e)
     {
-        // When user picks from the ListBox, update the Property
-        // The Property Changed handler above will then trigger ApplyTheme
-        if (e.AddedItems.Count > 0 && e.AddedItems[0] is string themeName)
+        if (e.Text.Length > 0 && _completionWindow != null)
         {
-            SetCurrentValue(SelectedThemeProperty, themeName);
+            // If user types a space or special char, close the window
+            // Allow '$' and '_' as they are valid in Nginx directives/variables
+            if (!char.IsLetterOrDigit(e.Text[0]) && e.Text[0] != '$' && e.Text[0] != '_')
+            {
+                _completionWindow.CompletionList.RequestInsertion(e);
+            }
         }
     }
+
+    private void TextArea_TextEntered(object? sender, TextInputEventArgs e)
+    {
+        if (e.Text.Length == 0) return;
+
+        // 1. Always trigger if the user explicitly types '$' (Variable start)
+        // This applies regardless of position (arguments or directives)
+        if (e.Text[0] == '$')
+        {
+            ShowCompletionWindow();
+            return;
+        }
+
+        var textArea = (TextArea)sender;
+
+        // 2. For normal letters, ONLY trigger if we are typing a Directive (Start of line)
+        // If we are past the first word (Argument context), suppress completion to avoid noise.
+        if (char.IsLetter(e.Text[0]) && IsTypingDirective(textArea))
+        {
+            ShowCompletionWindow();
+        }
+    }
+
+    /// <summary>
+    /// Checks if the caret is currently editing the first word on the line (Directive context).
+    /// </summary>
+    private bool IsTypingDirective(TextArea textArea)
+    {
+        var line = textArea.Document.GetLineByOffset(textArea.Caret.Offset);
+        // Get text from start of line up to caret
+        var textBeforeCaret = textArea.Document.GetText(line.Offset, textArea.Caret.Offset - line.Offset);
+
+        // Remove leading whitespace (indentation)
+        var trimmed = textBeforeCaret.TrimStart();
+
+        // If there is any whitespace left, it means we have passed the first word 
+        // and are likely typing arguments.
+        // IndexOfAny returns -1 if no space/tab is found.
+        return trimmed.IndexOfAny(new[] { ' ', '\t' }) == -1;
+    }
+
+    private void TextArea_KeyDown(object? sender, KeyEventArgs e)
+    {
+        // Check for Ctrl + Space to trigger manually
+        if (e.Key == Key.Space && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            ShowCompletionWindow();
+            e.Handled = true;
+        }
+    }
+
+    private void ShowCompletionWindow()
+    {
+        var editor = this.FindControl<TextEditor>("Editor");
+        if (editor == null || _completionWindow != null) return;
+
+        // Create the window
+        _completionWindow = new CompletionWindow(editor.TextArea);
+
+        // Get the current word being typed to filter the list
+        string currentWord = GetCurrentWord(editor.TextArea);
+        
+        // IMPORTANT: Adjust the StartOffset to include the characters already typed.
+        // This ensures "add_he" is replaced by "add_header" instead of becoming "add_headd_header".
+        _completionWindow.StartOffset -= currentWord.Length;
+
+        var data = _completionWindow.CompletionList.CompletionData;
+
+        // Add Keywords matching user input
+        foreach (var keyword in NginxKeywords.All)
+        {
+            // Using StartsWith for filtering
+            if (keyword.StartsWith(currentWord, StringComparison.OrdinalIgnoreCase))
+            {
+                data.Add(new NginxCompletionData(keyword));
+            }
+        }
+
+        if (data.Count > 0)
+        {
+            _completionWindow.Show();
+            _completionWindow.Closed += (o, args) => _completionWindow = null;
+        }
+        else
+        {
+            _completionWindow = null;
+        }
+    }
+
+    private string GetCurrentWord(TextArea textArea)
+    {
+        int offset = textArea.Caret.Offset;
+        if (offset == 0) return "";
+
+        int start = offset - 1;
+        while (start >= 0)
+        {
+            char c = textArea.Document.GetCharAt(start);
+            if (!char.IsLetterOrDigit(c) && c != '_' && c != '$')
+            {
+                break;
+            }
+
+            start--;
+        }
+
+        start++; // Adjust to point to start of word
+
+        return textArea.Document.GetText(start, offset - start);
+    }
+
+    #endregion
+
+    #region Theming & Helper Logic
 
     private void ApplyTheme(string themeName)
     {
@@ -136,7 +256,7 @@ public partial class NginxCodeEditor : UserControl
     {
         var editor = this.FindControl<TextEditor>("Editor");
         if (editor == null) return;
-        
+
         foreach (var setting in theme.GetGuiColors())
         {
             switch (setting.Key)
@@ -174,8 +294,6 @@ public partial class NginxCodeEditor : UserControl
         }
     }
 
-
-    // Public method for Snippet Manager
     public void InsertTextAtCursor(string text)
     {
         var editor = this.FindControl<TextEditor>("Editor");
@@ -185,4 +303,6 @@ public partial class NginxCodeEditor : UserControl
             editor.Focus();
         }
     }
+
+    #endregion
 }

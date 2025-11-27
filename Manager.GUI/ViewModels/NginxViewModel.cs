@@ -18,17 +18,18 @@ public partial class NginxViewModel : ViewModelBase
 
     // Events
     public event Action<string>? InsertTextRequested; // View subscribes to this
+    public event Action<NginxSnippet>? EditSnippetRequested; // View subscribes to this
 
     // Collections
     [ObservableProperty] private ObservableCollection<NginxSite> _sites = new();
     [ObservableProperty] private ObservableCollection<NginxSnippet> _snippets = new(); // New Collection
-    
+
     // Properties
     [ObservableProperty] private NginxSite? _selectedSite;
     [ObservableProperty] private NginxSnippet? _selectedSnippet; // Selection for editing
     [ObservableProperty] private string _currentConfigText = string.Empty;
     [ObservableProperty] private string _statusMessage = "Ready";
-    
+
     // Settings properties...
     [ObservableProperty] private ObservableCollection<string> _availableThemes = new();
     [ObservableProperty] private string _currentTheme = "dark_vs";
@@ -36,7 +37,7 @@ public partial class NginxViewModel : ViewModelBase
     [ObservableProperty] private double _editorFontSize;
 
     public NginxViewModel(
-        NginxService nginxService, 
+        NginxService nginxService,
         SettingsService settingsService,
         NginxSnippetService snippetService) // Inject
     {
@@ -61,6 +62,15 @@ public partial class NginxViewModel : ViewModelBase
         CurrentTheme = s.EditorTheme;
         EditorFontFamily = new FontFamily(s.EditorFontFamily);
         EditorFontSize = s.EditorFontSize;
+    }
+
+    #region snippets
+
+    [RelayCommand]
+    private void EditSnippet(NginxSnippet snippet)
+    {
+        if (snippet == null) return;
+        EditSnippetRequested?.Invoke(snippet);
     }
 
     [RelayCommand]
@@ -97,7 +107,18 @@ public partial class NginxViewModel : ViewModelBase
             await _snippetService.SaveSnippetsAsync(Snippets);
         }
     }
-    
+
+    // Called by the View after the Edit Window closes successfully
+    public async Task SaveSnippetsExternal()
+    {
+        await _snippetService.SaveSnippetsAsync(Snippets);
+        StatusMessage = "Snippets saved.";
+    }
+
+    #endregion
+
+    #region sites
+
     [RelayCommand]
     private async Task LoadSites()
     {
@@ -184,4 +205,6 @@ public partial class NginxViewModel : ViewModelBase
             StatusMessage = $"Error toggling site: {ex.Message}";
         }
     }
+
+    #endregion
 }

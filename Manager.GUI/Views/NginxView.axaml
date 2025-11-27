@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Manager.GUI.ViewModels"
-             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:controls="using:Manager.GUI.Controls"
              x:Class="Manager.GUI.Views.NginxView"
              x:DataType="vm:NginxViewModel">
 
@@ -16,57 +16,75 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto, *" ColumnDefinitions="300, *"> <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
-                    Orientation="Horizontal" Spacing="10" Margin="10" Background="#2d2d2d">
-            <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0"/>
-            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange"/>
-        </StackPanel>
+    <Grid RowDefinitions="Auto, *" ColumnDefinitions="300, *">
+        
+        <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+              ColumnDefinitions="Auto, *, Auto"
+              Margin="10" Background="#2d2d2d">
+            
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0"/>
+                <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange"/>
+            </StackPanel>
+
+            <Button Grid.Column="2" Content="Save &amp; Reload" 
+                    Command="{Binding SaveConfigCommand}"
+                    Background="#27ae60" Foreground="White" 
+                    Padding="15,8" Margin="0,0,10,0"
+                    ToolTip.Tip="Save Configuration and Reload Nginx"/>
+        </Grid>
 
         <Border Grid.Row="1" Grid.Column="0" BorderBrush="#333" BorderThickness="0,0,1,0">
             <TabControl Margin="0">
                 
-                <TabItem Header="Sites">
+                 <TabItem Header="Sites">
                     <ListBox ItemsSource="{Binding Sites}" 
                              SelectedItem="{Binding SelectedSite}"
                              Background="Transparent">
-                        <ListBox.ItemTemplate>
+                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="30, *, Auto">
-                                    <Ellipse Grid.Column="0" Width="10" Height="10" 
+                                <Grid ColumnDefinitions="30, *, Auto" Margin="0,0,15,0">
+                                     <Ellipse Grid.Column="0" Width="10" Height="10" 
                                              Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
+                                     <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
                                     <Button Grid.Column="2" Content="Toggle" 
                                             Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).ToggleSiteCommand}"
                                             CommandParameter="{Binding .}"
                                             FontSize="10" Padding="5,2"/>
-                                </Grid>
+                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                </TabItem>
+                 </TabItem>
 
                 <TabItem Header="Snippets">
                     <Grid RowDefinitions="*, Auto">
                         <ListBox Grid.Row="0" 
-                                 ItemsSource="{Binding Snippets}" 
+                                  ItemsSource="{Binding Snippets}" 
                                  SelectedItem="{Binding SelectedSnippet}"
                                  Background="Transparent">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Border BorderBrush="#444" BorderThickness="0,0,0,1" Padding="5">
-                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                         <Grid ColumnDefinitions="*, Auto, Auto, Auto">
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                                 <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
                                                 <TextBlock Text="{Binding Description}" FontSize="10" Foreground="#AAA"/>
-                                            </StackPanel>
+                                             </StackPanel>
                                             
-                                            <Button Grid.Column="1" Content="â†’" 
+                                            <Button Grid.Column="1" Content="→" 
                                                     ToolTip.Tip="Insert at Cursor"
                                                     Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).InsertSnippetCommand}"
                                                     CommandParameter="{Binding .}"
                                                     Margin="5,0" Background="Transparent"/>
+
+                                            <Button Grid.Column="2" Content="✎" 
+                                                    ToolTip.Tip="Edit Snippet"
+                                                    Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).EditSnippetCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    Margin="0,0,5,0" Background="Transparent"/>
                                             
-                                            <Button Grid.Column="2" Content="Ã—" 
+                                            <Button Grid.Column="3" Content="×" 
                                                     ToolTip.Tip="Delete Snippet"
                                                     Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).RemoveSnippetCommand}"
                                                     CommandParameter="{Binding .}"
@@ -77,38 +95,19 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
                         
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="5">
+                         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="5">
                             <Button Command="{Binding AddSnippetCommand}" Content="Add Snippet" HorizontalAlignment="Stretch"/>
-                            </StackPanel>
-                    </Grid>
+                        </StackPanel>
+                     </Grid>
                 </TabItem>
             </TabControl>
         </Border>
 
-        <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="*, Auto">
-            <avaloniaEdit:TextEditor Name="ConfigEditor"
-                           Grid.Row="0"
-                           FontFamily="{Binding EditorFontFamily}"
-                           FontSize="{Binding EditorFontSize}"
-                           ShowLineNumbers="True"
-                           HorizontalScrollBarVisibility="Auto"
-                           VerticalScrollBarVisibility="Visible"/>
-            
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
-                <Button Content="Theme">
-                    <Button.Flyout>
-                        <Flyout Placement="Top">
-                            <ListBox ItemsSource="{Binding AvailableThemes}" 
-                                     SelectedItem="{Binding CurrentTheme}"
-                                     Height="200" Width="150"/>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
-
-                <Button Command="{Binding SaveConfigCommand}" 
-                        Content="Save &amp; Reload Nginx" 
-                        Background="#27ae60" Foreground="White" Padding="15,10"/>
-            </StackPanel>
-        </Grid>
+        <controls:NginxCodeEditor Grid.Row="1" Grid.Column="1"
+                                  Name="MainEditor"
+                                  Text="{Binding CurrentConfigText}"
+                                  SelectedTheme="{Binding CurrentTheme}"
+                                  FontFamily="{Binding EditorFontFamily}"
+                                  FontSize="{Binding EditorFontSize}"/>
     </Grid>
 </UserControl>
