@@ -34,7 +34,7 @@
                      Background="Transparent">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid ColumnDefinitions="30, *, Auto">
+                        <Grid ColumnDefinitions="30, *, Auto" Margin="0,0,15,0">
                             <Ellipse Grid.Column="0" Width="10" Height="10" 
                                      Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
                             
@@ -54,13 +54,29 @@
             
             <avaloniaEdit:TextEditor Name="ConfigEditor"
                            Grid.Row="0"
-                           FontFamily="Cascadia Code,Consolas,Monospace"
-                           FontSize="14"
+                           FontFamily="{Binding EditorFontFamily}"
+                           FontSize="{Binding EditorFontSize}"
                            ShowLineNumbers="True"
                            HorizontalScrollBarVisibility="Auto"
                            VerticalScrollBarVisibility="Visible"/>
             
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
+                <Button Content="Theme">
+                    <Button.Flyout>
+                        <Flyout Placement="Top">
+                            <ListBox ItemsSource="{Binding AvailableThemes}" 
+                                     SelectedItem="{Binding CurrentTheme}"
+                                     Height="200" Width="150">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Margin="5"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
                 <Button Command="{Binding SaveConfigCommand}" 
                         Content="Save &amp; Reload Nginx" 
                         Background="#27ae60" Foreground="White" Padding="15,10"/>

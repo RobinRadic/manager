@@ -24,7 +24,6 @@ public class NginxRegistryOptions : IRegistryOptions
 
             if (stream != null)
             {
-                // FIX: Wrap the stream in a StreamReader
                 using (var reader = new StreamReader(stream))
                 {
                     return GrammarReader.ReadGrammarSync(reader);
@@ -37,10 +36,17 @@ public class NginxRegistryOptions : IRegistryOptions
 
     public IRawTheme GetTheme(string scopeName)
     {
-        // 1. Get the stream from the TextMateSharp assembly
-        var stream = typeof(RegistryOptions).Assembly.GetManifestResourceStream("TextMateSharp.Grammars.Resources.Themes.dark_vs.json");
+        // Default theme fallback
+        return GetThemeByName("dark_vs");
+    }
 
-        // 2. Wrap it in a StreamReader
+    public IRawTheme GetThemeByName(string themeName)
+    {
+        // TextMateSharp stores themes as embedded resources in this namespace format
+        string resourceName = $"TextMateSharp.Grammars.Resources.Themes.{themeName}.json";
+        
+        var stream = typeof(RegistryOptions).Assembly.GetManifestResourceStream(resourceName);
+
         if (stream != null)
         {
             using (var reader = new StreamReader(stream))
@@ -50,6 +56,26 @@ public class NginxRegistryOptions : IRegistryOptions
         }
 
         return null;
+    }
+
+    public List<string> GetAvailableThemes()
+    {
+        var themes = new List<string>();
+        // Scan the TextMateSharp assembly for theme resources
+        var resources = typeof(RegistryOptions).Assembly.GetManifestResourceNames();
+        
+        foreach (var res in resources)
+        {
+            if (res.StartsWith("TextMateSharp.Grammars.Resources.Themes.") && res.EndsWith(".json"))
+            {
+                // Extract "dark_vs" from "TextMateSharp.Grammars.Resources.Themes.dark_vs.json"
+                var name = res.Replace("TextMateSharp.Grammars.Resources.Themes.", "").Replace(".json", "");
+                themes.Add(name);
+            }
+        }
+        
+        themes.Sort();
+        return themes;
     }
 
     public IRawTheme GetDefaultTheme() => GetTheme("dark_vs");

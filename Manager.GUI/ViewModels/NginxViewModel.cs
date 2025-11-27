@@ -1,15 +1,18 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Manager.Core.Features.Nginx;
+using Manager.GUI.Services.Settings;
 
 namespace Manager.GUI.ViewModels;
 
 public partial class NginxViewModel : ViewModelBase
 {
     private readonly NginxService _nginxService;
+    private readonly SettingsService _settingsService;
 
     [ObservableProperty]
     private ObservableCollection<NginxSite> _sites = new();
@@ -23,10 +26,41 @@ public partial class NginxViewModel : ViewModelBase
     [ObservableProperty]
     private string _statusMessage = "Ready";
 
-    public NginxViewModel(NginxService nginxService)
+    [ObservableProperty]
+    private ObservableCollection<string> _availableThemes = new();
+
+    [ObservableProperty]
+    private string _currentTheme = "dark_vs";
+
+// Add properties for binding the Editor Appearance
+    [ObservableProperty] private FontFamily _editorFontFamily;
+    [ObservableProperty] private double _editorFontSize;
+    // CurrentTheme is already there, but we will sync it
+
+    public NginxViewModel(NginxService nginxService, SettingsService settingsService)
     {
         _nginxService = nginxService;
+        _settingsService = settingsService; // Inject
+
+        // Subscribe to settings changes
+        _settingsService.SettingsChanged += OnSettingsChanged;
+
+        // Initial Load
+        ApplySettings(_settingsService.CurrentSettings);
+
         LoadSitesCommand.Execute(null);
+    }
+
+    private void OnSettingsChanged(AppSettings newSettings)
+    {
+        ApplySettings(newSettings);
+    }
+
+    private void ApplySettings(AppSettings s)
+    {
+        CurrentTheme = s.EditorTheme;
+        EditorFontFamily = new FontFamily(s.EditorFontFamily);
+        EditorFontSize = s.EditorFontSize;
     }
 
     [RelayCommand]

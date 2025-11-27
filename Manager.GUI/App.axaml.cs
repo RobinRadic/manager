@@ -2,8 +2,11 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
 using AvaloniaEdit;
 using Manager.Core;
+using Manager.GUI.Services.Nginx;
+using Manager.GUI.Services.Settings;
 using Manager.GUI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,14 +27,23 @@ public class App : Application
     {
         var collection = new ServiceCollection();
         collection.RegisterManagers();
-
+        
+        collection.AddSingleton<SettingsService>();
+        collection.AddTransient<NginxRegistryOptions>();
+        
         collection.AddTransient<MainViewModel>();
         collection.AddTransient<HostsViewModel>();
         collection.AddTransient<NginxViewModel>();
         collection.AddTransient<SettingsViewModel>();
 
         Services = collection.BuildServiceProvider();
-
+        var settingsService = Services.GetRequiredService<SettingsService>();
+        
+        // Apply saved theme
+        RequestedThemeVariant = settingsService.CurrentSettings.AppTheme == "Dark" 
+            ? ThemeVariant.Dark 
+            : ThemeVariant.Light;
+        
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var mainViewModel = Services.GetRequiredService<MainViewModel>();

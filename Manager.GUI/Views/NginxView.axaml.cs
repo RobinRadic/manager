@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Media;
 using AvaloniaEdit;
 using AvaloniaEdit.CodeCompletion;
 using AvaloniaEdit.Editing;
@@ -9,6 +13,7 @@ using AvaloniaEdit.TextMate;
 using Manager.GUI.Services.Nginx;
 using Manager.GUI.ViewModels;
 using TextMateSharp.Grammars;
+using TextMateSharp.Themes;
 
 namespace Manager.GUI.Views;
 
@@ -57,7 +62,27 @@ public partial class NginxView : UserControl
         {
             _vm = vm;
 
-            // Listen for changes FROM the ViewModel (e.g. when a new site is selected)
+            // Populate Available Themes from our RegistryOptions helper
+            if (_registryOptions != null)
+            {
+                var themes = _registryOptions.GetAvailableThemes();
+                vm.AvailableThemes.Clear();
+                foreach (var t in themes)
+                {
+                    vm.AvailableThemes.Add(t);
+                }
+
+                // Default theme if none selected
+                if (string.IsNullOrEmpty(vm.CurrentTheme))
+                {
+                    vm.CurrentTheme = "dark_vs";
+                }
+            }
+
+            // Apply the current theme immediately
+            ApplyTheme(vm.CurrentTheme);
+
+            // Listen for changes FROM the ViewModel (e.g. when a new site is selected or theme changes)
             vm.PropertyChanged += ViewModel_PropertyChanged;
         }
     }
@@ -73,6 +98,75 @@ public partial class NginxView : UserControl
             {
                 editor.Text = _vm?.CurrentConfigText ?? "";
             }
+        }
+        else if (e.PropertyName == nameof(NginxViewModel.CurrentTheme))
+        {
+            if (_vm != null)
+            {
+                ApplyTheme(_vm.CurrentTheme);
+            }
+        }
+    }
+
+    private void ApplyTheme(string themeName)
+    {
+        if (_registryOptions != null && _textMateInstallation != null && !string.IsNullOrEmpty(themeName))
+        {
+            // Load the specific theme by name
+            var theme = _registryOptions.GetThemeByName(themeName);
+
+            if (theme != null)
+            {
+                _textMateInstallation.SetTheme(theme);
+                ApplyGuiColors(theme);
+            }
+        }
+    }
+
+    private void ApplyGuiColors(IRawTheme theme)
+    {
+        var editor = this.FindControl<TextEditor>("ConfigEditor");
+        if (editor == null) return;
+
+        foreach (var setting in theme.GetGuiColors())
+        {
+            switch (setting.Key)
+            {
+                case "editor.background":
+                    editor.Background = ParseBrush(setting.Value.ToString());
+                    break;
+                case "editor.foreground":
+                    editor.Foreground = ParseBrush(setting.Value.ToString());
+                    break;
+                case "editor.selectionBackground":
+                    editor.TextArea.SelectionBrush = ParseBrush(setting.Value.ToString());
+                    break;
+                case "editorCursor.foreground":
+                    editor.TextArea.Caret.CaretBrush = ParseBrush(setting.Value.ToString());
+                    break;
+                default:
+                    break;
+            }
+        }
+        // 5. Line Highlight (Optional)
+        // AvaloniaEdit handles line highlighting internally, but setting the background explicitly 
+        // for the line highlighter requires more deep access (ITextViewLineTransformer). 
+        // For now, the TextMate installation usually handles syntax coloring, 
+        // but the main editor background must be set manually as done above.
+    }
+
+    private IBrush? ParseBrush(string hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return null;
+        try
+        {
+            // Avalonia Color.Parse can handle #RGB, #RRGGBB, #AARRGGBB
+            var color = Color.Parse(hex);
+            return new SolidColorBrush(color);
+        }
+        catch
+        {
+            return null;
         }
     }
 
@@ -100,7 +194,7 @@ public partial class NginxView : UserControl
             ShowCompletionWindow();
         }
     }
-    
+
     private void TextArea_KeyDown(object? sender, KeyEventArgs e)
     {
         // Check for Ctrl + Space
@@ -108,7 +202,7 @@ public partial class NginxView : UserControl
         {
             // Trigger the completion window manually
             ShowCompletionWindow();
-        
+
             // IMPORTANT: Mark as handled so a space isn't actually inserted
             e.Handled = true;
         }
