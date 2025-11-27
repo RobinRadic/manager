@@ -5,6 +5,21 @@
              x:Class="Manager.GUI.Views.NginxView"
              x:DataType="vm:NginxViewModel">
 
+    <UserControl.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="5,2"/>
+        </Style>
+        <Style Selector="ToolTip">
+            <Setter Property="Background" Value="#252526"/> <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Monospace"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="MaxWidth" Value="350"/>
+        </Style>
+    </UserControl.Styles>
     <Grid RowDefinitions="Auto, *" ColumnDefinitions="250, *">
         
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
@@ -42,7 +57,6 @@
                            FontFamily="Cascadia Code,Consolas,Monospace"
                            FontSize="14"
                            ShowLineNumbers="True"
-                           SyntaxHighlighting="C#" 
                            HorizontalScrollBarVisibility="Auto"
                            VerticalScrollBarVisibility="Visible"/>
             

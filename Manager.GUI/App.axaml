@@ -27,4 +27,5 @@
             <Setter Property="ScrollBar.AllowAutoHide" Value="False" />
         </Style>
     </Application.Styles>
+    
 </Application>

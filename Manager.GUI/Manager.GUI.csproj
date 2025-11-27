@@ -22,11 +22,22 @@
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0"/>
+        <PackageReference Include="TextMateSharp.Grammars" Version="1.0.70" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Manager.Core\Manager.Core.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\Grammars\nginx.tmLanguage" />
+      <EmbeddedResource Include="Resources\Grammars\nginx.tmLanguage" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Grammars\nginx.json" />
     </ItemGroup>
 </Project>
