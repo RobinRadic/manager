@@ -4,6 +4,7 @@
     <option name="projectPerEditor">
       <map>
         <entry key="Manager.GUI/App.axaml" value="Manager.GUI/Manager.GUI.csproj" />
+        <entry key="Manager.GUI/Controls/NginxCodeEditor.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/MainWindow.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/HostsPreviewWindow.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/HostsView.axaml" value="Manager.GUI/Manager.GUI.csproj" />

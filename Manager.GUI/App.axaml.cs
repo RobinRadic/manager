@@ -29,6 +29,7 @@ public class App : Application
         collection.RegisterManagers();
         
         collection.AddSingleton<SettingsService>();
+        collection.AddSingleton<NginxSnippetService>();
         collection.AddTransient<NginxRegistryOptions>();
         
         collection.AddTransient<MainViewModel>();

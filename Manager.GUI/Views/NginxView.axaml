@@ -9,49 +9,83 @@
         <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="5,2"/>
         </Style>
-        <Style Selector="ToolTip">
-            <Setter Property="Background" Value="#252526"/> <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="BorderBrush" Value="#3E3E42"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Monospace"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="MaxWidth" Value="350"/>
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="10,5"/>
         </Style>
     </UserControl.Styles>
-    <Grid RowDefinitions="Auto, *" ColumnDefinitions="250, *">
-        
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
+
+    <Grid RowDefinitions="Auto, *" ColumnDefinitions="300, *"> <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" 
                     Orientation="Horizontal" Spacing="10" Margin="10" Background="#2d2d2d">
             <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0"/>
             <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange"/>
         </StackPanel>
 
         <Border Grid.Row="1" Grid.Column="0" BorderBrush="#333" BorderThickness="0,0,1,0">
-            <ListBox ItemsSource="{Binding Sites}" 
-                     SelectedItem="{Binding SelectedSite}"
-                     Background="Transparent">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid ColumnDefinitions="30, *, Auto" Margin="0,0,15,0">
-                            <Ellipse Grid.Column="0" Width="10" Height="10" 
-                                     Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
-                            
-                            <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
-                            
-                            <Button Grid.Column="2" Content="Toggle" 
-                                    Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).ToggleSiteCommand}"
-                                    CommandParameter="{Binding .}"
-                                    FontSize="10" Padding="5,2"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <TabControl Margin="0">
+                
+                <TabItem Header="Sites">
+                    <ListBox ItemsSource="{Binding Sites}" 
+                             SelectedItem="{Binding SelectedSite}"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="30, *, Auto">
+                                    <Ellipse Grid.Column="0" Width="10" Height="10" 
+                                             Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2" Content="Toggle" 
+                                            Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).ToggleSiteCommand}"
+                                            CommandParameter="{Binding .}"
+                                            FontSize="10" Padding="5,2"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </TabItem>
+
+                <TabItem Header="Snippets">
+                    <Grid RowDefinitions="*, Auto">
+                        <ListBox Grid.Row="0" 
+                                 ItemsSource="{Binding Snippets}" 
+                                 SelectedItem="{Binding SelectedSnippet}"
+                                 Background="Transparent">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#444" BorderThickness="0,0,0,1" Padding="5">
+                                        <Grid ColumnDefinitions="*, Auto, Auto">
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding Description}" FontSize="10" Foreground="#AAA"/>
+                                            </StackPanel>
+                                            
+                                            <Button Grid.Column="1" Content="â†’" 
+                                                    ToolTip.Tip="Insert at Cursor"
+                                                    Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).InsertSnippetCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    Margin="5,0" Background="Transparent"/>
+                                            
+                                            <Button Grid.Column="2" Content="Ã—" 
+                                                    ToolTip.Tip="Delete Snippet"
+                                                    Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).RemoveSnippetCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    Foreground="Red" Background="Transparent"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="5">
+                            <Button Command="{Binding AddSnippetCommand}" Content="Add Snippet" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                    </Grid>
+                </TabItem>
+            </TabControl>
         </Border>
 
         <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="*, Auto">
-            
             <avaloniaEdit:TextEditor Name="ConfigEditor"
                            Grid.Row="0"
                            FontFamily="{Binding EditorFontFamily}"
@@ -66,13 +100,7 @@
                         <Flyout Placement="Top">
                             <ListBox ItemsSource="{Binding AvailableThemes}" 
                                      SelectedItem="{Binding CurrentTheme}"
-                                     Height="200" Width="150">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}" Margin="5"/>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
+                                     Height="200" Width="150"/>
                         </Flyout>
                     </Button.Flyout>
                 </Button>

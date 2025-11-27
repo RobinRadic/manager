@@ -81,12 +81,28 @@ public partial class NginxView : UserControl
 
             // Apply the current theme immediately
             ApplyTheme(vm.CurrentTheme);
-
+            
+            vm.InsertTextRequested -= OnInsertTextRequested; // Unsubscribe first to avoid duplicates
+            vm.InsertTextRequested += OnInsertTextRequested;
+            
             // Listen for changes FROM the ViewModel (e.g. when a new site is selected or theme changes)
             vm.PropertyChanged += ViewModel_PropertyChanged;
         }
     }
-
+    
+    private void OnInsertTextRequested(string text)
+    {
+        var editor = this.FindControl<TextEditor>("ConfigEditor");
+        if (editor != null && !string.IsNullOrEmpty(text))
+        {
+            // Insert text at the current caret position
+            editor.TextArea.Document.Insert(editor.TextArea.Caret.Offset, text);
+            
+            // Optional: Set focus back to editor
+            editor.Focus();
+        }
+    }
+    
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(NginxViewModel.CurrentConfigText))

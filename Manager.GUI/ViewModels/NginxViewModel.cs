@@ -5,6 +5,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Manager.Core.Features.Nginx;
+using Manager.GUI.Services.Nginx;
 using Manager.GUI.Services.Settings;
 
 namespace Manager.GUI.ViewModels;
@@ -13,42 +14,41 @@ public partial class NginxViewModel : ViewModelBase
 {
     private readonly NginxService _nginxService;
     private readonly SettingsService _settingsService;
+    private readonly NginxSnippetService _snippetService; // New Dependency
 
-    [ObservableProperty]
-    private ObservableCollection<NginxSite> _sites = new();
+    // Events
+    public event Action<string>? InsertTextRequested; // View subscribes to this
 
-    [ObservableProperty]
-    private NginxSite? _selectedSite;
-
-    [ObservableProperty]
-    private string _currentConfigText = string.Empty;
-
-    [ObservableProperty]
-    private string _statusMessage = "Ready";
-
-    [ObservableProperty]
-    private ObservableCollection<string> _availableThemes = new();
-
-    [ObservableProperty]
-    private string _currentTheme = "dark_vs";
-
-// Add properties for binding the Editor Appearance
+    // Collections
+    [ObservableProperty] private ObservableCollection<NginxSite> _sites = new();
+    [ObservableProperty] private ObservableCollection<NginxSnippet> _snippets = new(); // New Collection
+    
+    // Properties
+    [ObservableProperty] private NginxSite? _selectedSite;
+    [ObservableProperty] private NginxSnippet? _selectedSnippet; // Selection for editing
+    [ObservableProperty] private string _currentConfigText = string.Empty;
+    [ObservableProperty] private string _statusMessage = "Ready";
+    
+    // Settings properties...
+    [ObservableProperty] private ObservableCollection<string> _availableThemes = new();
+    [ObservableProperty] private string _currentTheme = "dark_vs";
     [ObservableProperty] private FontFamily _editorFontFamily;
     [ObservableProperty] private double _editorFontSize;
-    // CurrentTheme is already there, but we will sync it
 
-    public NginxViewModel(NginxService nginxService, SettingsService settingsService)
+    public NginxViewModel(
+        NginxService nginxService, 
+        SettingsService settingsService,
+        NginxSnippetService snippetService) // Inject
     {
         _nginxService = nginxService;
-        _settingsService = settingsService; // Inject
+        _settingsService = settingsService;
+        _snippetService = snippetService;
 
-        // Subscribe to settings changes
         _settingsService.SettingsChanged += OnSettingsChanged;
-
-        // Initial Load
         ApplySettings(_settingsService.CurrentSettings);
 
         LoadSitesCommand.Execute(null);
+        LoadSnippetsCommand.Execute(null); // Load snippets on start
     }
 
     private void OnSettingsChanged(AppSettings newSettings)
@@ -63,6 +63,41 @@ public partial class NginxViewModel : ViewModelBase
         EditorFontSize = s.EditorFontSize;
     }
 
+    [RelayCommand]
+    private async Task LoadSnippets()
+    {
+        var list = await _snippetService.LoadSnippetsAsync();
+        Snippets.Clear();
+        foreach (var s in list) Snippets.Add(s);
+    }
+
+    [RelayCommand]
+    private void InsertSnippet(NginxSnippet snippet)
+    {
+        if (snippet == null) return;
+        InsertTextRequested?.Invoke(snippet.Content);
+        StatusMessage = $"Inserted snippet: {snippet.Name}";
+    }
+
+    [RelayCommand]
+    private async Task AddSnippet()
+    {
+        var newSnippet = new NginxSnippet { Name = "New Snippet", Content = "# Config here" };
+        Snippets.Add(newSnippet);
+        SelectedSnippet = newSnippet;
+        await _snippetService.SaveSnippetsAsync(Snippets);
+    }
+
+    [RelayCommand]
+    private async Task RemoveSnippet(NginxSnippet snippet)
+    {
+        if (snippet != null && Snippets.Contains(snippet))
+        {
+            Snippets.Remove(snippet);
+            await _snippetService.SaveSnippetsAsync(Snippets);
+        }
+    }
+    
     [RelayCommand]
     private async Task LoadSites()
     {
@@ -122,26 +157,26 @@ public partial class NginxViewModel : ViewModelBase
     private async Task ToggleSite(NginxSite site)
     {
         if (site == null) return;
-        
+
         bool newState = !site.IsEnabled;
         try
         {
             await _nginxService.ToggleSiteAsync(site, newState);
-            
+
             // Update UI state locally to reflect change
             site.IsEnabled = newState;
             // Force refresh of the list item (trick to update UI icon)
             var index = Sites.IndexOf(site);
-            if (index != -1) 
+            if (index != -1)
             {
-                Sites[index] = new NginxSite 
-                { 
-                    Name = site.Name, 
-                    FilePath = site.FilePath, 
-                    IsEnabled = newState 
+                Sites[index] = new NginxSite
+                {
+                    Name = site.Name,
+                    FilePath = site.FilePath,
+                    IsEnabled = newState
                 };
             }
-            
+
             StatusMessage = newState ? $"Enabled {site.Name}" : $"Disabled {site.Name}";
         }
         catch (Exception ex)
