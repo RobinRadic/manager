@@ -1,5 +1,6 @@
 using System;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Threading;
 using Manager.GUI.Controls;
 using Manager.GUI.Services.Nginx;
@@ -80,5 +81,16 @@ public partial class NginxView : UserControl
                 await _vm.SaveSnippetsExternal();
             }
         });
+    }
+    
+    private void ChatBox_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && _vm != null)
+        {
+            if (_vm.SubmitChatCommand.CanExecute(null))
+            {
+                _vm.SubmitChatCommand.Execute(null);
+            }
+        }
     }
 }

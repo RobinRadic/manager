@@ -1,0 +1,29 @@
+<svg width="64px" height="64px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Linux Manager Shield M Icon</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="shieldGradient">
+            <stop stop-color="#2C3E50" offset="0%"/>
+            <stop stop-color="#1A252F" offset="100%"/>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="150%" id="mGradient">
+            <stop stop-color="#00F2FF" offset="0%"/>
+            <stop stop-color="#0099FF" offset="100%"/>
+        </linearGradient>
+        <filter id="softGlow" height="150%" width="150%" x="-25%" y="-25%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur"/>
+            <feFlood flood-color="#00BBFF" flood-opacity="0.4" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="coloredBlur"/>
+            <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="Icon-V3" fill="none" fill-rule="evenodd">
+        <path d="M32,2 C15.4314575,2 2,4.6862915 2,8 L2,26 C2,42.5685425 14.5355339,56.4852814 32,62 C49.4644661,56.4852814 62,42.5685425 62,26 L62,8 C62,4.6862915 48.5685425,2 32,2 Z" id="Shield-Shape" fill="url(#shieldGradient)" stroke="#34495E" stroke-width="2"/>
+
+        <g id="M-Content" transform="translate(16.000000, 12.000000)" filter="url(#softGlow)">
+            <path d="M2,32 L2,2 C2,0.8954305 2.8954305,-2.27373675e-13 4,-2.27373675e-13 C4.64180438,-2.27191018e-13 5.24506036,0.309693319 5.61803399,0.833043017 L16,15.407 L26.381966,0.833043017 C26.7549396,0.309693319 27.3581956,-2.2568174e-13 28,-2.27373675e-13 C29.1045695,-2.27373675e-13 30,0.8954305 30,2 L30,32 C30,33.1045695 29.1045695,34 28,34 C26.8954305,34 26,33.1045695 26,32 L26,11.4 L17.618034,23.166957 C17.2450604,23.6903067 16.6418044,24 16,24 C15.3581956,24 14.7549396,23.6903067 14.381966,23.166957 L6,11.4 L6,32 C6,33.1045695 5.1045695,34 4,34 C2.8954305,34 2,33.1045695 2,32 Z" id="M-Shape" fill="url(#mGradient)"/>
+        </g>
+    </g>
+</svg>

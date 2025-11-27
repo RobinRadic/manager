@@ -12,6 +12,18 @@
                              HorizontalScrollBarVisibility="Auto"
                              VerticalScrollBarVisibility="Visible"
                              FontFamily="{Binding FontFamily, ElementName=Root}"
-                             FontSize="{Binding FontSize, ElementName=Root}"/>
-
+                             FontSize="{Binding FontSize, ElementName=Root}">
+        <avaloniaEdit:TextEditor.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Cut" Command="{Binding Cut, ElementName=Editor}" />
+                <MenuItem Header="Copy" Command="{Binding Copy, ElementName=Editor}" />
+                <MenuItem Header="Paste" Command="{Binding Paste, ElementName=Editor}" />
+                <Separator />
+                <MenuItem Header="AI: Explain Selection" 
+                          Command="{Binding InternalExplainCommand, ElementName=Root}" />
+                <MenuItem Header="AI: Fix / Optimize Selection" 
+                          Command="{Binding InternalFixCommand, ElementName=Root}" />
+            </ContextMenu>
+        </avaloniaEdit:TextEditor.ContextMenu>
+    </avaloniaEdit:TextEditor>
 </UserControl>

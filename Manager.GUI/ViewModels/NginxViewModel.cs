@@ -5,6 +5,7 @@ using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Manager.Core.Features.Nginx;
+using Manager.GUI.Services.AI;
 using Manager.GUI.Services.Nginx;
 using Manager.GUI.Services.Settings;
 
@@ -15,7 +16,8 @@ public partial class NginxViewModel : ViewModelBase
     private readonly NginxService _nginxService;
     private readonly SettingsService _settingsService;
     private readonly NginxSnippetService _snippetService; // New Dependency
-
+    private readonly AiService _aiService;
+    
     // Events
     public event Action<string>? InsertTextRequested; // View subscribes to this
     public event Action<NginxSnippet>? EditSnippetRequested; // View subscribes to this
@@ -23,7 +25,13 @@ public partial class NginxViewModel : ViewModelBase
     // Collections
     [ObservableProperty] private ObservableCollection<NginxSite> _sites = new();
     [ObservableProperty] private ObservableCollection<NginxSnippet> _snippets = new(); // New Collection
-
+    
+    // AI Panel Props
+    [ObservableProperty] private bool _isAiPanelOpen = false;
+    [ObservableProperty] private string _userQuery = "";
+    [ObservableProperty] private ObservableCollection<ChatMessage> _chatMessages = new();
+    [ObservableProperty] private bool _isAiBusy;
+    
     // Properties
     [ObservableProperty] private NginxSite? _selectedSite;
     [ObservableProperty] private NginxSnippet? _selectedSnippet; // Selection for editing
@@ -39,11 +47,13 @@ public partial class NginxViewModel : ViewModelBase
     public NginxViewModel(
         NginxService nginxService,
         SettingsService settingsService,
-        NginxSnippetService snippetService) // Inject
+        NginxSnippetService snippetService,
+        AiService aiService) // Inject
     {
         _nginxService = nginxService;
         _settingsService = settingsService;
         _snippetService = snippetService;
+        _aiService = aiService;
 
         _settingsService.SettingsChanged += OnSettingsChanged;
         ApplySettings(_settingsService.CurrentSettings);
@@ -63,6 +73,60 @@ public partial class NginxViewModel : ViewModelBase
         EditorFontFamily = new FontFamily(s.EditorFontFamily);
         EditorFontSize = s.EditorFontSize;
     }
+
+    #region AI
+
+    [RelayCommand]
+    private void ToggleAiPanel()
+    {
+        IsAiPanelOpen = !IsAiPanelOpen;
+    }
+
+    [RelayCommand]
+    private async Task SubmitChat()
+    {
+        if (string.IsNullOrWhiteSpace(UserQuery)) return;
+
+        IsAiBusy = true;
+        ChatMessages.Add(new ChatMessage("User", UserQuery));
+        var query = UserQuery;
+        UserQuery = ""; // Clear immediately
+
+        // Pass current config as context
+        var response = await _aiService.ChatAsync(query, CurrentConfigText);
+        ChatMessages.Add(new ChatMessage("Gemini", response));
+        IsAiBusy = false;
+    }
+
+    [RelayCommand]
+    private async Task ExplainSelection(string selection)
+    {
+        if (string.IsNullOrWhiteSpace(selection)) return;
+        
+        IsAiPanelOpen = true;
+        IsAiBusy = true;
+        ChatMessages.Add(new ChatMessage("User", $"Explain this:\n{selection}"));
+        
+        var response = await _aiService.ExplainCodeAsync(selection);
+        ChatMessages.Add(new ChatMessage("Gemini", response));
+        IsAiBusy = false;
+    }
+
+    [RelayCommand]
+    private async Task FixSelection(string selection)
+    {
+        if (string.IsNullOrWhiteSpace(selection)) return;
+
+        IsAiPanelOpen = true;
+        IsAiBusy = true;
+        ChatMessages.Add(new ChatMessage("User", $"Fix/Optimize this:\n{selection}"));
+
+        var response = await _aiService.FixCodeAsync(selection);
+        ChatMessages.Add(new ChatMessage("Gemini", response));
+        IsAiBusy = false;
+    }
+
+    #endregion
 
     #region snippets
 

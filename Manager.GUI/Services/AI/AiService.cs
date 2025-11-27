@@ -42,7 +42,7 @@ public class AiService
         return s.AiProvider switch
         {
             "OpenAI" => "gpt-4o",
-            "Google" => "gemini-1.5-flash",
+            "Google" => "gemini-2.5-flash",
             "Anthropic" => "claude-3-5-sonnet-latest",
             _ => "gemini-1.5-flash"
         };
@@ -55,15 +55,18 @@ public class AiService
 
         try
         {
-            var conversation = api.Chat.CreateConversation(new ChatModel(GetModelName()));
+            var conversation = api.Chat.CreateConversation(new ChatModel(GetModelName())); 
+            conversation.AppendSystemMessage("You are an expert Nginx Administrator. Be concise.");
             
             if (!string.IsNullOrWhiteSpace(systemContext))
             {
-                conversation.AppendSystemMessage("You are an expert Nginx Administrator. Be concise.");
-                conversation.AppendSystemMessage($"CURRENT CONFIG CONTEXT:\n{systemContext}");
+                // conversation.AppendSystemMessage($"CURRENT CONFIG CONTEXT:\n{systemContext}");
+                conversation.AppendUserInput($"CURRENT CONFIG CONTEXT:\n{systemContext}\n");
             }
 
             conversation.AppendUserInput(userMessage);
+            var response = await conversation.GetResponseRich();
+            return response.Text;
             return await conversation.GetResponse() ?? "No response.";
         }
         catch (Exception ex)

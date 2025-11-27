@@ -14,6 +14,7 @@ using Manager.GUI.Services.Nginx;
 using TextMateSharp.Grammars;
 using TextMateSharp.Themes;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Manager.GUI.Controls;
 
@@ -42,15 +43,59 @@ public partial class NginxCodeEditor : UserControl
         get => GetValue(SelectedThemeProperty);
         set => SetValue(SelectedThemeProperty, value);
     }
+    
+    public static readonly StyledProperty<ICommand> ExplainCommandProperty =
+        AvaloniaProperty.Register<NginxCodeEditor, ICommand>(nameof(ExplainCommand));
 
+    public ICommand ExplainCommand
+    {
+        get => GetValue(ExplainCommandProperty);
+        set => SetValue(ExplainCommandProperty, value);
+    }
+
+    public static readonly StyledProperty<ICommand> FixCommandProperty =
+        AvaloniaProperty.Register<NginxCodeEditor, ICommand>(nameof(FixCommand));
+
+    public ICommand FixCommand
+    {
+        get => GetValue(FixCommandProperty);
+        set => SetValue(FixCommandProperty, value);
+    }
     #endregion
-
+// Internal commands bound to the ContextMenu items
+    public ICommand InternalExplainCommand { get; }
+    public ICommand InternalFixCommand { get; }
+    
     public NginxCodeEditor()
     {
         InitializeComponent();
+        // Setup internal relay commands
+        InternalExplainCommand = new RelayCommand(() => ExecuteAiCommand(ExplainCommand));
+        InternalFixCommand = new RelayCommand(() => ExecuteAiCommand(FixCommand));
+        
         InitializeTextMate();
     }
+    
+    private void ExecuteAiCommand(ICommand externalCommand)
+    {
+        var editor = this.FindControl<TextEditor>("Editor");
+        if (editor == null || externalCommand == null) return;
 
+        string selection = editor.SelectedText;
+        
+        // If nothing selected, maybe send the whole line? Or just return.
+        if (string.IsNullOrWhiteSpace(selection))
+        {
+            // Optional: fallback to current line
+            // selection = editor.Document.GetText(editor.Document.GetLineByOffset(editor.Caret.Offset));
+            return; 
+        }
+
+        if (externalCommand.CanExecute(selection))
+        {
+            externalCommand.Execute(selection);
+        }
+    }
     private void InitializeTextMate()
     {
         var editor = this.FindControl<TextEditor>("Editor");
