@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
 using AvaloniaEdit;
 using Manager.Core;
+using Manager.GUI.Services.AI;
 using Manager.GUI.Services.Nginx;
 using Manager.GUI.Services.Settings;
 using Manager.GUI.ViewModels;
@@ -31,6 +32,7 @@ public class App : Application
         collection.AddSingleton<SettingsService>();
         collection.AddSingleton<NginxSnippetService>();
         collection.AddTransient<NginxRegistryOptions>();
+        collection.AddSingleton<AiService>();
         
         collection.AddTransient<MainViewModel>();
         collection.AddTransient<HostsViewModel>();

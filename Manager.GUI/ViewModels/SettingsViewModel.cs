@@ -31,7 +31,17 @@ public partial class SettingsViewModel : ViewModelBase
 
     // -- Editor Font Size --
     [ObservableProperty] private double _fontSize;
-
+    [ObservableProperty] private string _aiApiKey;
+    [ObservableProperty] private string _selectedAiProvider;
+    [ObservableProperty] private string _aiModel;
+    
+    public ObservableCollection<string> AiProviders { get; } = new() 
+    { 
+        "Google", 
+        "OpenAI", 
+        "Anthropic"
+    };
+    
     public SettingsViewModel(SettingsService settingsService, NginxRegistryOptions nginxOptions)
     {
         _settingsService = settingsService;
@@ -63,8 +73,29 @@ public partial class SettingsViewModel : ViewModelBase
         SelectedEditorTheme = s.EditorTheme;
         SelectedFont = s.EditorFontFamily;
         FontSize = s.EditorFontSize;
+        
+        // AI
+        AiApiKey = s.AiApiKey;
+        SelectedAiProvider = s.AiProvider;
+        AiModel = s.AiModel;
     }
-
+    
+    partial void OnSelectedAiProviderChanged(string value)
+    {
+        // Simple convenience to switch defaults if the user hasn't typed a custom one yet
+        // or just to provide a hint. For now, we leave the existing model unless it's empty.
+        if (string.IsNullOrEmpty(AiModel))
+        {
+            AiModel = value switch
+            {
+                "Google" => "gemini-1.5-flash",
+                "OpenAI" => "gpt-4o",
+                "Anthropic" => "claude-3-5-sonnet-latest",
+                _ => ""
+            };
+        }
+    }
+    
     [RelayCommand]
     private async Task SaveSettings()
     {
@@ -73,7 +104,11 @@ public partial class SettingsViewModel : ViewModelBase
             AppTheme = SelectedAppTheme,
             EditorTheme = SelectedEditorTheme,
             EditorFontFamily = SelectedFont,
-            EditorFontSize = FontSize
+            EditorFontSize = FontSize,
+            // AI
+            AiProvider = SelectedAiProvider,
+            AiApiKey = AiApiKey,
+            AiModel = AiModel
         };
 
         await _settingsService.SaveSettingsAsync(newSettings);
