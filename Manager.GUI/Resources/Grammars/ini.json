@@ -1,0 +1,35 @@
+{
+    "name": "INI",
+    "scopeName": "source.ini",
+    "fileTypes": ["ini", "cfg", "conf"],
+    "patterns": [
+        {
+            "match": "\\s*;.*$",
+            "name": "comment.line.semicolon.ini"
+        },
+        {
+            "match": "\\s*#.*$",
+            "name": "comment.line.number-sign.ini"
+        },
+        {
+            "captures": {
+                "1": { "name": "punctuation.definition.entity.ini" },
+                "2": { "name": "entity.name.section.group-title.ini" },
+                "3": { "name": "punctuation.definition.entity.ini" }
+            },
+            "match": "^\\s*(\\[)(.*?)(\\])\\s*$",
+            "name": "meta.section.header.ini"
+        },
+        {
+            "captures": {
+                "1": { "name": "keyword.other.definition.ini" },
+                "2": { "name": "punctuation.separator.key-value.ini" },
+                "3": { "name": "string.unquoted.ini" },
+                "4": { "name": "string.quoted.double.ini" },
+                "5": { "name": "string.quoted.single.ini" }
+            },
+            "match": "^\\s*([a-zA-Z0-9_\\.-]+)\\s*(=)\\s*(?:(\"[^\"]*\")|('[^']*')|([^;\\n]*))",
+            "name": "meta.setting.ini"
+        }
+    ]
+}

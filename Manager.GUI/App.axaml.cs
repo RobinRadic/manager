@@ -7,6 +7,7 @@ using AvaloniaEdit;
 using Manager.Core;
 using Manager.GUI.Services.AI;
 using Manager.GUI.Services.Nginx;
+using Manager.GUI.Services.Php;
 using Manager.GUI.Services.Settings;
 using Manager.GUI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,11 +35,14 @@ public class App : Application
         collection.AddSingleton<SettingsService>();
         collection.AddSingleton<NginxSnippetService>();
         collection.AddTransient<NginxRegistryOptions>();
+        
+        collection.AddTransient<PhpRegistryOptions>();
         collection.AddSingleton<AiService>();
         
         collection.AddTransient<MainViewModel>();
         collection.AddTransient<HostsViewModel>();
         collection.AddTransient<NginxViewModel>();
+        collection.AddTransient<PhpViewModel>();
         collection.AddTransient<SettingsViewModel>();
 
         Services = collection.BuildServiceProvider();

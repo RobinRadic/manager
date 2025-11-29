@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Manager.GUI.ViewModels"
+             xmlns:controls="using:Manager.GUI.Controls"
+             x:Class="Manager.GUI.Views.PhpView"
+             x:DataType="vm:PhpViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="5,2" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto, *">
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="10" Background="#2d2d2d">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="PHP Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0" />
+                <!-- Version Flyout Button -->
+                <Button Content="{Binding SelectedVersion, StringFormat='Ver: {0}'}" Background="#444">
+                    <Button.Flyout>
+                        <Flyout>
+                            <ListBox ItemsSource="{Binding Versions}" SelectedItem="{Binding SelectedVersion}" Width="100"/>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange" Margin="10,0"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                <Button Content="🤖 AI Assistant" Command="{Binding ToggleAiPanelCommand}" Background="#007acc" Foreground="White"/>
+                <Button Content="Save Config" Command="{Binding SaveConfigCommand}" Background="#27ae60" Foreground="White" Margin="0,0,10,0"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="{Binding AiColumnWidth, Mode=TwoWay}" MinWidth="{Binding AiPanelMinWidth}" MaxWidth="800" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Pane: Modules -->
+            <Border Grid.Column="0" BorderBrush="#333" BorderThickness="0,0,1,0">
+                <Grid RowDefinitions="Auto, *">
+                    <TextBlock Grid.Row="0" Text="Modules / Configs" FontWeight="Bold" Margin="10" />
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="30, *, Auto">
+                                    <Ellipse Grid.Column="0" Width="10" Height="10" Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="2" Content="Toggle" 
+                                            Command="{Binding $parent[UserControl].((vm:PhpViewModel)DataContext).ToggleModuleCommand}" 
+                                            CommandParameter="{Binding .}" FontSize="10" Padding="5,2" Margin="0,0,10,0"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- Middle: INI Editor -->
+            <controls:PhpCodeEditor Grid.Column="1"
+                                    Name="PhpEditor"
+                                    Text="{Binding CurrentConfigText}"
+                                    SelectedTheme="{Binding CurrentTheme}"
+                                    FontFamily="{Binding EditorFontFamily}"
+                                    FontSize="{Binding EditorFontSize}"
+                                    ExplainCommand="{Binding ExplainSelectionCommand}"
+                                    FixCommand="{Binding FixSelectionCommand}"/>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="2" ResizeDirection="Columns" Width="4" Background="#3e3e42" IsVisible="{Binding IsAiPanelOpen}" />
+
+            <!-- Right: AI Panel -->
+            <controls:AiAssistantPanel Grid.Column="3"
+                                       IsVisible="{Binding IsAiPanelOpen}"
+                                       Title="Gemini (PHP Config Expert)"
+                                       Messages="{Binding ChatMessages}"
+                                       Query="{Binding UserQuery, Mode=TwoWay}"
+                                       IsBusy="{Binding IsAiBusy}"
+                                       SubmitCommand="{Binding SubmitChatCommand}" />
+        </Grid>
+    </Grid>
+</UserControl>

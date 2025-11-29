@@ -6,11 +6,13 @@
         <entry key="Manager.GUI/App.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Controls/AiAssistantPanel.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Controls/NginxCodeEditor.axaml" value="Manager.GUI/Manager.GUI.csproj" />
+        <entry key="Manager.GUI/Controls/PhpCodeEditor.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/MainWindow.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/HostsPreviewWindow.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/HostsView.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/NginxSnippetEditorWindow.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/NginxView.axaml" value="Manager.GUI/Manager.GUI.csproj" />
+        <entry key="Manager.GUI/Views/PhpView.axaml" value="Manager.GUI/Manager.GUI.csproj" />
         <entry key="Manager.GUI/Views/SettingsView.axaml" value="Manager.GUI/Manager.GUI.csproj" />
       </map>
     </option>

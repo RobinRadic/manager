@@ -8,6 +8,7 @@ public partial class MainViewModel : ViewModelBase
     // The DI Container injects these specific ViewModels
     private readonly HostsViewModel _hostsVm;
     private readonly NginxViewModel _nginxVm; 
+    private readonly PhpViewModel _phpVm;
     private readonly SettingsViewModel _settingsVm; 
     // private readonly DatabaseViewModel _dbVm; // Uncomment later
 
@@ -20,11 +21,13 @@ public partial class MainViewModel : ViewModelBase
     public MainViewModel(
         HostsViewModel hostsVm,
         NginxViewModel nginxVm,
+        PhpViewModel phpVm,
         SettingsViewModel settingsVm
         )
     {
         _hostsVm = hostsVm;
         _nginxVm = nginxVm;
+        _phpVm = phpVm;
         _settingsVm = settingsVm;
 
         // Default to Hosts view for now (or a Dashboard view)
@@ -43,6 +46,13 @@ public partial class MainViewModel : ViewModelBase
     {
         CurrentPage = _nginxVm;
         PaneTitle = "Nginx Manager";
+    }
+
+    [RelayCommand]
+    private void NavigateToPhp()
+    {
+        CurrentPage = _phpVm;
+        PaneTitle = "PHP Manager";
     }
 
     [RelayCommand]
