@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
+             xmlns:controls="using:Manager.GUI.Controls"
+             xmlns:ai="using:Manager.GUI.Services.AI"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="450"
+             x:Class="Manager.GUI.Controls.AiAssistantPanel"
+             x:Name="Root">
+
+    <Border Background="#252526" BorderBrush="#333" BorderThickness="1,0,0,0">
+        <Grid RowDefinitions="Auto, *, Auto" Margin="10">
+            <TextBlock Grid.Row="0" Text="{Binding #Root.Title}" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+            
+            <ScrollViewer Grid.Row="1">
+                <ItemsControl ItemsSource="{Binding #Root.Messages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="ai:ChatMessage">
+                             <Border Background="#333" CornerRadius="5" Padding="8" Margin="0,0,0,8">
+                                 <StackPanel>
+                                    <TextBlock Text="{Binding Role}" FontWeight="Bold" Foreground="#4ec9b0" FontSize="11"/>
+                                     
+                                    <md:MarkdownRenderer controls:AiAssistantPanel.MarkdownContent="{Binding Text}"
+                                                         IsVisible="{Binding !IsLoading}"/>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,5,0,0" IsVisible="{Binding IsLoading}">
+                                        <ProgressBar IsIndeterminate="True" Width="100" Height="2" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Text}" FontStyle="Italic" Foreground="#888" VerticalAlignment="Center" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+             <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,10,0,0">
+                <TextBox Grid.Column="0" 
+                         Text="{Binding #Root.Query, Mode=TwoWay}" 
+                         Watermark="Ask a question..." 
+                         KeyDown="ChatBox_KeyDown"/>
+                
+                <Button Grid.Column="1" 
+                        Content="Send" 
+                        Command="{Binding #Root.SubmitCommand}" 
+                        IsEnabled="{Binding !#Root.IsBusy}" 
+                        Margin="5,0,0,0"/>
+            </Grid>
+       </Grid>
+    </Border>
+</UserControl>

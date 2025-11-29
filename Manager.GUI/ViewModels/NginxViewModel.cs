@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -31,6 +32,11 @@ public partial class NginxViewModel : ViewModelBase
     [ObservableProperty] private string _userQuery = "";
     [ObservableProperty] private ObservableCollection<ChatMessage> _chatMessages = new();
     [ObservableProperty] private bool _isAiBusy;
+    
+    // Resizing Props
+    [ObservableProperty] private GridLength _aiColumnWidth = new GridLength(0); // Default closed
+    [ObservableProperty] private double _aiPanelMinWidth = 0; // Default 0 to allow collapse
+    private double _lastAiPanelWidth = 300; // Default width when opened
     
     // Properties
     [ObservableProperty] private NginxSite? _selectedSite;
@@ -75,7 +81,24 @@ public partial class NginxViewModel : ViewModelBase
     }
 
     #region AI
-
+    partial void OnIsAiPanelOpenChanged(bool value)
+    {
+        if (value)
+        {
+            // Opening: Restore width and set min width
+            AiPanelMinWidth = 200;
+            AiColumnWidth = new GridLength(_lastAiPanelWidth > 200 ? _lastAiPanelWidth : 300);
+        }
+        else
+        {
+            // Closing: Save current width (if valid) and collapse
+            if (AiColumnWidth.Value >= 200) _lastAiPanelWidth = AiColumnWidth.Value;
+            
+            AiPanelMinWidth = 0;
+            AiColumnWidth = new GridLength(0);
+        }
+    }
+    
     [RelayCommand]
     private void ToggleAiPanel()
     {
@@ -90,11 +113,18 @@ public partial class NginxViewModel : ViewModelBase
         IsAiBusy = true;
         ChatMessages.Add(new ChatMessage("User", UserQuery));
         var query = UserQuery;
-        UserQuery = ""; // Clear immediately
+        UserQuery = "";
 
-        // Pass current config as context
+        // Add loading indicator
+        var loadingMsg = new ChatMessage("Gemini", "Thinking...", true);
+        ChatMessages.Add(loadingMsg);
+
         var response = await _aiService.ChatAsync(query, CurrentConfigText);
+        
+        // Remove loading and add response
+        ChatMessages.Remove(loadingMsg);
         ChatMessages.Add(new ChatMessage("Gemini", response));
+        
         IsAiBusy = false;
     }
 
@@ -103,12 +133,18 @@ public partial class NginxViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(selection)) return;
         
-        IsAiPanelOpen = true;
+        IsAiPanelOpen = true; 
         IsAiBusy = true;
         ChatMessages.Add(new ChatMessage("User", $"Explain this:\n{selection}"));
         
+        var loadingMsg = new ChatMessage("Gemini", "Analyzing...", true);
+        ChatMessages.Add(loadingMsg);
+        
         var response = await _aiService.ExplainCodeAsync(selection);
+        
+        ChatMessages.Remove(loadingMsg);
         ChatMessages.Add(new ChatMessage("Gemini", response));
+        
         IsAiBusy = false;
     }
 
@@ -117,12 +153,18 @@ public partial class NginxViewModel : ViewModelBase
     {
         if (string.IsNullOrWhiteSpace(selection)) return;
 
-        IsAiPanelOpen = true;
+        IsAiPanelOpen = true; 
         IsAiBusy = true;
         ChatMessages.Add(new ChatMessage("User", $"Fix/Optimize this:\n{selection}"));
 
+        var loadingMsg = new ChatMessage("Gemini", "Fixing...", true);
+        ChatMessages.Add(loadingMsg);
+
         var response = await _aiService.FixCodeAsync(selection);
+        
+        ChatMessages.Remove(loadingMsg);
         ChatMessages.Add(new ChatMessage("Gemini", response));
+        
         IsAiBusy = false;
     }
 

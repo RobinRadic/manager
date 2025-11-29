@@ -22,6 +22,8 @@ public class App : Application
         var _ = typeof(TextEditor);
 
         AvaloniaXamlLoader.Load(this);
+
+        this.AttachDeveloperTools();
     }
 
     public override void OnFrameworkInitializationCompleted()

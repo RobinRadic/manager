@@ -19,10 +19,13 @@
                 <MenuItem Header="Copy" Command="{Binding Copy, ElementName=Editor}" />
                 <MenuItem Header="Paste" Command="{Binding Paste, ElementName=Editor}" />
                 <Separator />
-                <MenuItem Header="AI: Explain Selection" 
-                          Command="{Binding InternalExplainCommand, ElementName=Root}" />
-                <MenuItem Header="AI: Fix / Optimize Selection" 
-                          Command="{Binding InternalFixCommand, ElementName=Root}" />
+                <MenuItem Header="✨ AI: Explain Selection" 
+                          Command="{Binding #Root.ExecuteExplainCommand}"
+                          InputGesture="Ctrl+E"/>
+
+                <MenuItem Header="🔧 AI: Fix/Optimize Selection" 
+                          Command="{Binding #Root.ExecuteFixCommand}"
+                          InputGesture="Ctrl+F"/>
             </ContextMenu>
         </avaloniaEdit:TextEditor.ContextMenu>
     </avaloniaEdit:TextEditor>

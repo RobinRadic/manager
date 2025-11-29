@@ -20,11 +20,10 @@ namespace Manager.GUI.Controls;
 
 public partial class NginxCodeEditor : UserControl
 {
+    private TextEditor? _editor;
     private TextMate.Installation? _textMateInstallation;
     private NginxRegistryOptions? _registryOptions;
     private CompletionWindow? _completionWindow; // The missing Completion Window
-
-    #region Dependency Properties
 
     public static readonly StyledProperty<string> TextProperty =
         AvaloniaProperty.Register<NginxCodeEditor, string>(nameof(Text), defaultBindingMode: Avalonia.Data.BindingMode.TwoWay);
@@ -61,41 +60,34 @@ public partial class NginxCodeEditor : UserControl
         get => GetValue(FixCommandProperty);
         set => SetValue(FixCommandProperty, value);
     }
-    #endregion
-// Internal commands bound to the ContextMenu items
-    public ICommand InternalExplainCommand { get; }
-    public ICommand InternalFixCommand { get; }
-    
+
     public NginxCodeEditor()
     {
         InitializeComponent();
-        // Setup internal relay commands
-        InternalExplainCommand = new RelayCommand(() => ExecuteAiCommand(ExplainCommand));
-        InternalFixCommand = new RelayCommand(() => ExecuteAiCommand(FixCommand));
-        
+        _editor = this.FindControl<TextEditor>("Editor");
         InitializeTextMate();
     }
     
-    private void ExecuteAiCommand(ICommand externalCommand)
+    [RelayCommand]
+    private void ExecuteExplain()
     {
-        var editor = this.FindControl<TextEditor>("Editor");
-        if (editor == null || externalCommand == null) return;
-
-        string selection = editor.SelectedText;
-        
-        // If nothing selected, maybe send the whole line? Or just return.
-        if (string.IsNullOrWhiteSpace(selection))
+        var text = _editor?.SelectedText;
+        if (ExplainCommand?.CanExecute(text) == true)
         {
-            // Optional: fallback to current line
-            // selection = editor.Document.GetText(editor.Document.GetLineByOffset(editor.Caret.Offset));
-            return; 
-        }
-
-        if (externalCommand.CanExecute(selection))
-        {
-            externalCommand.Execute(selection);
+            ExplainCommand.Execute(text);
         }
     }
+
+    [RelayCommand]
+    private void ExecuteFix()
+    {
+        var text = _editor?.SelectedText;
+        if (FixCommand?.CanExecute(text) == true)
+        {
+            FixCommand.Execute(text);
+        }
+    }
+    
     private void InitializeTextMate()
     {
         var editor = this.FindControl<TextEditor>("Editor");
@@ -157,7 +149,6 @@ public partial class NginxCodeEditor : UserControl
     protected TextEditor TextEditor => this.FindControl<TextEditor>("Editor")!;
 
     #region Completion Logic (Restored)
-
     private void TextArea_TextEntering(object? sender, TextInputEventArgs e)
     {
         if (e.Text.Length > 0 && _completionWindow != null)

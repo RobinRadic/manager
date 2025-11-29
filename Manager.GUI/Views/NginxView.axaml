@@ -2,97 +2,104 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Manager.GUI.ViewModels"
              xmlns:controls="using:Manager.GUI.Controls"
-             xmlns:md="https://github.com/whistyun/Markdown.Avalonia"
+             xmlns:local="using:Manager.GUI.Views"
              xmlns:c="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+             xmlns:md="clr-namespace:LiveMarkdown.Avalonia;assembly=LiveMarkdown.Avalonia"
              x:Class="Manager.GUI.Views.NginxView"
              x:DataType="vm:NginxViewModel">
 
     <UserControl.Styles>
         <Style Selector="ListBoxItem">
-            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="Padding" Value="5,2" />
         </Style>
         <Style Selector="TabItem">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,5" />
         </Style>
     </UserControl.Styles>
 
     <Grid RowDefinitions="Auto, *">
-        
+
         <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto"
               Margin="10" Background="#2d2d2d">
-            
+
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0"/>
-                <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange"/>
+                <TextBlock Text="Nginx Manager" FontSize="18" VerticalAlignment="Center" Margin="10,0" />
+                <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="Orange" />
             </StackPanel>
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                <Button Content="🤖 AI Assistant" 
+                <Button Content="🤖 AI Assistant"
                         Command="{Binding ToggleAiPanelCommand}"
-                        Background="#007acc" Foreground="White" 
-                        Padding="10,8" Margin="0,0,0,0"/>
+                        Background="#007acc" Foreground="White"
+                        Padding="10,8" Margin="0,0,0,0" />
 
-                <Button Content="Save &amp; Reload" 
+                <Button Content="Save &amp; Reload"
                         Command="{Binding SaveConfigCommand}"
-                        Background="#27ae60" Foreground="White" 
-                        Padding="15,8" Margin="0,0,10,0"/>
+                        Background="#27ae60" Foreground="White"
+                        Padding="15,8" Margin="0,0,10,0" />
             </StackPanel>
         </Grid>
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" /> <ColumnDefinition Width="*" />   <ColumnDefinition Width="Auto" /> </Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="{Binding AiColumnWidth, Mode=TwoWay}"
+                                  MinWidth="{Binding AiPanelMinWidth}"
+                                  MaxWidth="800" />
+            </Grid.ColumnDefinitions>
 
             <Border Grid.Column="0" BorderBrush="#333" BorderThickness="0,0,1,0">
                 <TabControl Margin="0">
-                     <TabItem Header="Sites">
-                        <ListBox ItemsSource="{Binding Sites}" 
+                    <TabItem Header="Sites">
+                        <ListBox ItemsSource="{Binding Sites}"
                                  SelectedItem="{Binding SelectedSite}"
                                  Background="Transparent">
-                             <ListBox.ItemTemplate>
+                            <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid ColumnDefinitions="30, *, Auto">
-                                         <Ellipse Grid.Column="0" Width="10" Height="10" 
-                                                 Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}"/>
-                                         <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"/>
-                                        <Button Grid.Column="2" Content="Toggle" 
+                                        <Ellipse Grid.Column="0" Width="10" Height="10"
+                                                 Fill="{Binding IsEnabled, Converter={StaticResource StatusColorConverter}}" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" />
+                                        <Button Grid.Column="2" Content="Toggle"
                                                 Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).ToggleSiteCommand}"
                                                 CommandParameter="{Binding .}"
-                                                FontSize="10" Padding="5,2"/>
-                                     </Grid>
+                                                FontSize="10" Padding="5,2" />
+                                    </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                     </TabItem>
+                    </TabItem>
 
                     <TabItem Header="Snippets">
                         <Grid RowDefinitions="*, Auto">
-                            <ListBox Grid.Row="0" 
-                                      ItemsSource="{Binding Snippets}" 
+                            <ListBox Grid.Row="0"
+                                     ItemsSource="{Binding Snippets}"
                                      SelectedItem="{Binding SelectedSnippet}"
                                      Background="Transparent">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Border BorderBrush="#444" BorderThickness="0,0,0,1" Padding="5">
-                                             <Grid ColumnDefinitions="*, Auto, Auto, Auto">
+                                            <Grid ColumnDefinitions="*, Auto, Auto, Auto">
                                                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                     <TextBlock Text="{Binding Name}" FontWeight="Bold"/>
-                                                    <TextBlock Text="{Binding Description}" FontSize="10" Foreground="#AAA"/>
-                                                 </StackPanel>
-                                                <Button Grid.Column="1" Content="→" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).InsertSnippetCommand}" CommandParameter="{Binding .}" Margin="5,0" Background="Transparent"/>
-                                                <Button Grid.Column="2" Content="✎" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).EditSnippetCommand}" CommandParameter="{Binding .}" Margin="0,0,5,0" Background="Transparent"/>
-                                                <Button Grid.Column="3" Content="×" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).RemoveSnippetCommand}" CommandParameter="{Binding .}" Foreground="Red" Background="Transparent"/>
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" />
+                                                    <TextBlock Text="{Binding Description}" FontSize="10" Foreground="#AAA" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1" Content="→" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).InsertSnippetCommand}" CommandParameter="{Binding .}" Margin="5,0" Background="Transparent" />
+                                                <Button Grid.Column="2" Content="✎" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).EditSnippetCommand}" CommandParameter="{Binding .}" Margin="0,0,5,0" Background="Transparent" />
+                                                <Button Grid.Column="3" Content="×" Command="{Binding $parent[UserControl].((vm:NginxViewModel)DataContext).RemoveSnippetCommand}" CommandParameter="{Binding .}" Foreground="Red" Background="Transparent" />
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                             <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="5">
-                                <Button Command="{Binding AddSnippetCommand}" Content="Add Snippet" HorizontalAlignment="Stretch"/>
+                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="5" Margin="5">
+                                <Button Command="{Binding AddSnippetCommand}" Content="Add Snippet" HorizontalAlignment="Stretch" />
                             </StackPanel>
-                         </Grid>
+                        </Grid>
                     </TabItem>
                 </TabControl>
             </Border>
@@ -104,54 +111,21 @@
                                       FontFamily="{Binding EditorFontFamily}"
                                       FontSize="{Binding EditorFontSize}"
                                       ExplainCommand="{Binding ExplainSelectionCommand}"
-                                      FixCommand="{Binding FixSelectionCommand}"/>
+                                      FixCommand="{Binding FixSelectionCommand}" />
 
-            <Border Grid.Column="2" Width="300" Background="#252526" BorderBrush="#333" BorderThickness="1,0,0,0"
-                    IsVisible="{Binding IsAiPanelOpen}">
-                <Grid RowDefinitions="Auto, *, Auto" Margin="10">
-                    <TextBlock Grid.Row="0" Text="Gemini Assistant" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
-                    
-                    <ScrollViewer Grid.Row="1">
-                        <ItemsControl ItemsSource="{Binding ChatMessages}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#333" CornerRadius="5" Padding="8" Margin="0,0,0,8">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Role}" FontWeight="Bold" Foreground="#4ec9b0" FontSize="11"/>
-                                            <SelectableTextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,2,0,0"/>
-                                            <md:MarkdownScrollViewer  Markdown="{Binding Text}" >
-                                                <md:MarkdownScrollViewer.Styles>
-                                                    <Style Selector="md|MarkdownScrollViewer c|CTextBlock">
-                                                        <Setter Property="Foreground" Value="#d4d4d4"/>
-                                                        <Setter Property="FontSize" Value="13"/>
-                                                    </Style>
-                                                    <Style Selector="md|MarkdownScrollViewer c|CCode">
-                                                        <Setter Property="Foreground" Value="#ce9178"/>
-                                                        <Setter Property="Background" Value="#1e1e1e"/>
-                                                        <Setter Property="Padding" Value="2,0"/>
-                                                    </Style>
-                                                    <Style Selector="Border.CodeBlock">
-                                                        <Setter Property="Background" Value="#1e1e1e"/>
-                                                        <Setter Property="BorderBrush" Value="#444"/>
-                                                        <Setter Property="CornerRadius" Value="3"/>
-                                                        <Setter Property="Padding" Value="5"/>
-                                                        <Setter Property="Margin" Value="0,5"/>
-                                                    </Style>
-                                                </md:MarkdownScrollViewer.Styles>
-                                            </md:MarkdownScrollViewer>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+            <GridSplitter Grid.Column="2"
+                          ResizeDirection="Columns"
+                          Width="4"
+                          Background="#3e3e42"
+                          IsVisible="{Binding IsAiPanelOpen}" />
 
-                    <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Margin="0,10,0,0">
-                        <TextBox Grid.Column="0" Text="{Binding UserQuery}" Watermark="Ask a question..." KeyDown="ChatBox_KeyDown"/>
-                        <Button Grid.Column="1" Content="Send" Command="{Binding SubmitChatCommand}" IsEnabled="{Binding !IsAiBusy}" Margin="5,0,0,0"/>
-                    </Grid>
-                </Grid>
-            </Border>
+            <controls:AiAssistantPanel Grid.Column="3"
+                                       IsVisible="{Binding IsAiPanelOpen}"
+                                       Title="Gemini Assistant"
+                                       Messages="{Binding ChatMessages}"
+                                       Query="{Binding UserQuery, Mode=TwoWay}"
+                                       IsBusy="{Binding IsAiBusy}"
+                                       SubmitCommand="{Binding SubmitChatCommand}" />
         </Grid>
     </Grid>
 </UserControl>

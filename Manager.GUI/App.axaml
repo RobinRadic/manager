@@ -11,12 +11,17 @@
         <ResourceDictionary>
             <converters:StatusColorConverter x:Key="StatusColorConverter"/>
         </ResourceDictionary>
+        <Color x:Key="BorderColor">#3DFFFFFF</Color>
+        <Color x:Key="ForegroundColor">#FFFFFF</Color>
+        <Color x:Key="CardBackgroundColor">#15000000</Color>
+        <Color x:Key="SecondaryCardBackgroundColor">#99000000</Color>
     </Application.Resources>
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         
+        <StyleInclude Source="avares://LiveMarkdown.Avalonia/Styles.axaml"/>
         <Style Selector="ScrollBar">
             <Setter Property="AllowAutoHide" Value="False" />
         </Style>
