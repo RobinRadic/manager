@@ -115,4 +115,66 @@ public class NginxService
             .WithArguments("reload nginx")
             .ExecuteAsync();
     }
+    
+    public async Task<List<NginxConfigFile>> LoadConfigFilesAsync()
+    {
+        return await Task.Run(() =>
+        {
+            var list = new List<NginxConfigFile>();
+            var rootPath = "/etc/nginx";
+
+            if (!Directory.Exists(rootPath)) return list;
+
+            // 1. Get root files (nginx.conf, mime.types, etc.)
+            var rootFiles = Directory.GetFiles(rootPath, "*.*", SearchOption.TopDirectoryOnly)
+                .Where(f => f.EndsWith(".conf") || f.EndsWith(".types") || f.EndsWith("_params"));
+
+            foreach (var file in rootFiles)
+            {
+                list.Add(new NginxConfigFile 
+                { 
+                    Name = Path.GetFileName(file), 
+                    FilePath = file 
+                });
+            }
+
+            // 2. Get conf.d files if exists
+            var confD = Path.Combine(rootPath, "conf.d");
+            if (Directory.Exists(confD))
+            {
+                var confDFiles = Directory.GetFiles(confD, "*.conf");
+                foreach (var file in confDFiles)
+                {
+                    list.Add(new NginxConfigFile 
+                    { 
+                        Name = $"conf.d/{Path.GetFileName(file)}", 
+                        FilePath = file 
+                    });
+                }
+            }
+
+            return list.OrderBy(x => x.Name).ToList();
+        });
+    }
+
+// Generic file saver
+    public async Task SaveFileAsync(string path, string content)
+    {
+        await Task.Run(() =>
+        {
+            // Create backup
+            if (File.Exists(path))
+            {
+                File.Copy(path, path + ".bak", true);
+            }
+        
+            File.WriteAllText(path, content);
+        
+            // Validate Nginx (optional, but recommended)
+            // RunProcess("nginx", "-t"); 
+        
+            // Reload Nginx
+            // RunProcess("systemctl", "reload nginx");
+        });
+    }
 }

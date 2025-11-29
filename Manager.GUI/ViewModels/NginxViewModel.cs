@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Media;
@@ -26,6 +27,7 @@ public partial class NginxViewModel : ViewModelBase
     // Collections
     [ObservableProperty] private ObservableCollection<NginxSite> _sites = new();
     [ObservableProperty] private ObservableCollection<NginxSnippet> _snippets = new(); // New Collection
+    [ObservableProperty] private ObservableCollection<NginxConfigFile> _configFiles = new(); // NEW
     
     // AI Panel Props
     [ObservableProperty] private bool _isAiPanelOpen = false;
@@ -41,6 +43,8 @@ public partial class NginxViewModel : ViewModelBase
     // Properties
     [ObservableProperty] private NginxSite? _selectedSite;
     [ObservableProperty] private NginxSnippet? _selectedSnippet; // Selection for editing
+    [ObservableProperty] private NginxConfigFile? _selectedConfigFile;
+    
     [ObservableProperty] private string _currentConfigText = string.Empty;
     [ObservableProperty] private string _statusMessage = "Ready";
 
@@ -66,6 +70,7 @@ public partial class NginxViewModel : ViewModelBase
 
         LoadSitesCommand.Execute(null);
         LoadSnippetsCommand.Execute(null); // Load snippets on start
+        LoadConfigFilesCommand.Execute(null);
     }
 
     private void OnSettingsChanged(AppSettings newSettings)
@@ -223,6 +228,46 @@ public partial class NginxViewModel : ViewModelBase
 
     #endregion
 
+    #region Config Files (NEW REGION)
+
+    [RelayCommand]
+    private async Task LoadConfigFiles()
+    {
+        var configs = await _nginxService.LoadConfigFilesAsync();
+        ConfigFiles.Clear();
+        foreach (var c in configs) ConfigFiles.Add(c);
+    }
+
+    // When a Config File is selected
+    partial void OnSelectedConfigFileChanged(NginxConfigFile? value)
+    {
+        if (value != null)
+        {
+            // Deselect others to avoid confusion
+            SelectedSite = null;
+            SelectedSnippet = null;
+
+            LoadConfigFromFile(value);
+        }
+    }
+
+    private async void LoadConfigFromFile(NginxConfigFile file)
+    {
+        try
+        {
+            StatusMessage = $"Reading {file.Name}...";
+            // Simple read, assuming the service handles permissions or we are root
+            CurrentConfigText = await Task.Run(() => File.ReadAllText(file.FilePath));
+            StatusMessage = $"Loaded {file.Name}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    #endregion
+    
     #region sites
 
     [RelayCommand]
@@ -240,10 +285,15 @@ public partial class NginxViewModel : ViewModelBase
     {
         if (value != null)
         {
+            // Deselect others
+            SelectedConfigFile = null; 
+            SelectedSnippet = null;
+
             LoadConfigForSite(value);
         }
-        else
+        else if (SelectedConfigFile == null && SelectedSnippet == null)
         {
+            // Only clear text if nothing else is selected
             CurrentConfigText = "";
         }
     }
@@ -261,23 +311,43 @@ public partial class NginxViewModel : ViewModelBase
             StatusMessage = $"Error loading config: {ex.Message}";
         }
     }
-
+    
     [RelayCommand]
     private async Task SaveConfig()
     {
-        if (SelectedSite == null) return;
+        // 1. Save Site
+        if (SelectedSite != null)
+        {
+            try
+            {
+                StatusMessage = "Saving Site...";
+                await _nginxService.SaveConfigAsync(SelectedSite.Name, CurrentConfigText);
+                StatusMessage = "Site saved & Nginx reloaded.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"SAVE FAILED: {ex.Message}";
+            }
+            return;
+        }
 
-        try
+        // 2. Save Config File (NEW)
+        if (SelectedConfigFile != null)
         {
-            StatusMessage = "Saving and validating...";
-            await _nginxService.SaveConfigAsync(SelectedSite.Name, CurrentConfigText);
-            StatusMessage = "Configuration saved & Nginx reloaded successfully.";
+            try
+            {
+                StatusMessage = $"Saving {SelectedConfigFile.Name}...";
+                await _nginxService.SaveFileAsync(SelectedConfigFile.FilePath, CurrentConfigText);
+                StatusMessage = "Config saved.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"SAVE FAILED: {ex.Message}";
+            }
+            return;
         }
-        catch (Exception ex)
-        {
-            // In a real app, use a Dialog Service here to show the full Nginx error
-            StatusMessage = $"SAVE FAILED: {ex.Message}";
-        }
+        
+        StatusMessage = "Nothing selected to save.";
     }
 
     [RelayCommand]
